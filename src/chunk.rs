@@ -1,7 +1,111 @@
+use std::fmt::{Display, Formatter};
+use std::io::Read;
+use crate::chunk_type::ChunkType;
+use anyhow::Result;
+use crc::{Crc, Algorithm, CRC_32_ISO_HDLC};
+
+pub const CASTAGNOLI: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
+
+
+struct Chunk{
+    length: u32,
+    chunk_type: ChunkType,
+    data: Vec<u8>,
+    crc: u32,
+}
+
+impl TryFrom<&[u8]> for Chunk {
+    type Error = ();
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let length = u32::from_be_bytes(value[0..4].try_into().unwrap());
+        let chunk_type: &[u8; 4] = <&[u8; 4]>::try_from(&value[4..8]).unwrap();
+        let data = &value[8..(8 + length as usize)];
+        let crc = u32::from_be_bytes(value[(8 + length as usize)..].try_into().unwrap());
+        let mix = chunk_type
+            .iter()
+            .chain(data.iter())
+            .copied()
+            .collect::<Vec<_>>();
+        let real_crc = CASTAGNOLI.checksum(mix.as_slice());
+        if crc == real_crc {
+            Ok(Chunk { length,
+                chunk_type: {ChunkType::try_from(*chunk_type).unwrap()},
+                data: data.to_vec(),
+                crc
+            })
+        } else {
+            Err(())
+        }
+
+    }
+}
+
+impl Display for Chunk {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "chunk_type: {}\ndata: {}\nlength:{}\ncrc:{}",
+               self.chunk_type,
+               String::from_utf8(self.data.clone()).unwrap(),
+               self.length,
+               self.crc
+        )
 
 
 
+    }
+}
 
+impl Chunk {
+    fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
+        let mix = chunk_type
+            .bytes()
+            .iter()
+            .chain(data.iter())
+            .copied()
+            .collect::<Vec<_>>();
+        let length = data.len() as u32;
+        let crc = CASTAGNOLI.checksum(mix.as_slice());
+        Chunk {
+            chunk_type,
+            data,
+            length,
+            crc,
+        }
+    }
+
+    fn length(&self) -> u32 {
+        self.length
+    }
+
+    fn chunk_type(&self) -> &ChunkType {
+        &self.chunk_type
+    }
+
+    fn data(&self) -> &[u8] {
+        &self.data
+    }
+
+    fn crc(&self) -> u32 {
+        self.crc
+    }
+
+    fn data_as_string(&self) -> Result<String> {
+        let s = String::from_utf8(self.data.clone())?;
+        Ok(s)
+    }
+
+    fn as_bytes(&self) -> Vec<u8> {
+        let all= self.length
+            .to_be_bytes()
+            .iter()
+            .chain(self.chunk_type.bytes().iter())
+            .chain(self.data.iter())
+            .chain(self.crc.to_be_bytes().iter())
+            .copied()
+            .collect();
+        all
+    }
+}
 
 #[cfg(test)]
 mod tests {
