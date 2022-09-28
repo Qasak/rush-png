@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter};
 use std::io::Read;
+// TODO: fix
 use crate::chunk_type::ChunkType;
 use anyhow::Result;
 use crc::{Crc, Algorithm, CRC_32_ISO_HDLC};
@@ -7,7 +8,7 @@ use crc::{Crc, Algorithm, CRC_32_ISO_HDLC};
 pub const CASTAGNOLI: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 
 
-struct Chunk{
+pub struct Chunk{
     length: u32,
     chunk_type: ChunkType,
     data: Vec<u8>,
@@ -56,7 +57,7 @@ impl Display for Chunk {
 }
 
 impl Chunk {
-    fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
+    pub(crate) fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
         let mix = chunk_type
             .bytes()
             .iter()
@@ -94,7 +95,7 @@ impl Chunk {
         Ok(s)
     }
 
-    fn as_bytes(&self) -> Vec<u8> {
+    pub(crate) fn as_bytes(&self) -> Vec<u8> {
         let all= self.length
             .to_be_bytes()
             .iter()
