@@ -1,2 +1,3 @@
 # rush-png
-from PNGme
+inspired by PNGme
+Messaging via PNG and more.
