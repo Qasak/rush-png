@@ -14,5 +14,5 @@
 
 inspired by PNGme
 
-Messaging via PNG and more.
+Later, jpg, jpeg, webp and other formats will be supported.
 
