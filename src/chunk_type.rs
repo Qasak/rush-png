@@ -1,31 +1,41 @@
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
-
+use anyhow::{Result, Error};
 #[derive(Eq, PartialEq, Debug)]
 pub struct ChunkType {
     chunk_type: [u8; 4],
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+enum ChunkTypeErrorKind {
+    TooManyChars,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ParseChunkTypeError {
+    kind: ChunkTypeErrorKind,
+}
+
 impl TryFrom<[u8; 4]> for ChunkType {
-    type Error = ();
+    type Error = ParseChunkTypeError;
 
     fn try_from(value: [u8; 4]) -> Result<Self, Self::Error> {
         if value.iter().all(|c| c.is_ascii_alphabetic()) {
             Ok(ChunkType{chunk_type: value})
         } else {
-            Err(())
+            Err(ParseChunkTypeError { kind: ChunkTypeErrorKind::TooManyChars })
         }
     }
 }
 
 impl FromStr for ChunkType {
-    type Err = ();
+    type Err = ParseChunkTypeError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.len() == 4 && s.bytes().into_iter().all(|c| c.is_ascii_alphabetic()) {
             Ok(ChunkType{chunk_type: <[u8; 4]>::try_from(s.as_bytes()).unwrap() })
         } else {
-            Err(())
+            Err(ParseChunkTypeError { kind: ChunkTypeErrorKind::TooManyChars })
         }
     }
 }

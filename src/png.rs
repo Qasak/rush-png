@@ -2,7 +2,7 @@ use super::*;
 use std::fmt::{Display, Formatter, write};
 use std::process::id;
 use std::str::FromStr;
-use anyhow::Result;
+use anyhow::{Result, Error};
 use crate::chunk_type::ChunkType;
 use crate::chunk::Chunk;
 
@@ -108,7 +108,7 @@ mod tests {
 
     fn chunk_from_strings(chunk_type: &str, data: &str) -> Result<Chunk> {
         use std::str::FromStr;
-
+        // let chunk_type = ChunkType::from_str(chunk_type)?;
         let chunk_type = ChunkType::from_str(chunk_type);
         let data: Vec<u8> = data.bytes().collect();
 
