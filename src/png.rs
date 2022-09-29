@@ -1,4 +1,87 @@
+use super::*;
+use std::fmt::{Display, Formatter, write};
+use std::process::id;
+use std::str::FromStr;
 use anyhow::Result;
+use crate::chunk_type::ChunkType;
+use crate::chunk::Chunk;
+
+
+
+#[derive(Eq, PartialEq, Debug)]
+pub struct Png {
+    chunks: Vec<Chunk>
+}
+
+impl TryFrom<&[u8]> for Png {
+    type Error = ();
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let mut chunks = vec![];
+        if value[0..8] == Png::STANDARD_HEADER {
+            let mut idx: usize = 8;
+            while idx < value.len() {
+                let chunk = Chunk::try_from(&value[idx..]).unwrap();
+                idx += chunk.length() as usize + 12;
+                chunks.push(chunk);
+            }
+            Ok(Png::from_chunks(chunks))
+        } else {
+            Err(())
+        }
+    }
+}
+
+impl Display for Png {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.chunks)
+    }
+}
+
+impl Png {
+    pub const STANDARD_HEADER: [u8; 8] = [137, 80, 78, 71, 13, 10, 26, 10];
+
+    pub fn from_chunks(chunks: Vec<Chunk>) -> Png {
+        Png{
+            chunks
+        }
+    }
+
+    pub fn append_chunk(&mut self, chunk: Chunk) {
+        self.chunks.push(chunk);
+    }
+
+    // TODO:
+    pub fn remove_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
+        let idx = self.chunks.iter().position(|chunk| chunk.chunk_type().to_string() == chunk_type);
+        Ok(self.chunks.remove(idx.unwrap()))
+    }
+
+    pub fn header(&self) -> &[u8; 8] {
+        &Png::STANDARD_HEADER
+    }
+
+    pub fn chunks(&self) -> &[Chunk] {
+        self.chunks.as_ref()
+    }
+
+    pub fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
+        if let Some(idx) = self.chunks.iter().position(|chunk| chunk.chunk_type().to_string() == chunk_type) {
+            self.chunks.get(idx)
+        } else {
+            None
+        }
+    }
+
+    pub fn as_bytes(&self) -> Vec<u8> {
+        let mut ret = vec![];
+        ret.append(&mut Png::STANDARD_HEADER.to_vec());
+        for chunk in self.chunks() {
+            ret.append(&mut chunk.as_bytes().clone());
+        }
+        ret
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -26,10 +109,10 @@ mod tests {
     fn chunk_from_strings(chunk_type: &str, data: &str) -> Result<Chunk> {
         use std::str::FromStr;
 
-        let chunk_type = ChunkType::from_str(chunk_type)?;
+        let chunk_type = ChunkType::from_str(chunk_type);
         let data: Vec<u8> = data.bytes().collect();
 
-        Ok(Chunk::new(chunk_type, data))
+        Ok(Chunk::new(chunk_type.unwrap(), data))
     }
 
     #[test]
