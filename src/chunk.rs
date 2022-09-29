@@ -20,6 +20,7 @@ impl TryFrom<&[u8]> for Chunk {
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         let length = u32::from_be_bytes(value[0..4].try_into().unwrap());
         let chunk_type: &[u8; 4] = <&[u8; 4]>::try_from(&value[4..8]).unwrap();
+        println!("chunk_type: {:?}", String::from_utf8(chunk_type.to_vec()));
         let data = &value[8..(8 + length as usize)];
         let crc = u32::from_be_bytes(value[(8 + length as usize)..(12 + length as usize)].try_into().unwrap());
         let mix = chunk_type
