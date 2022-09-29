@@ -1,13 +1,12 @@
 use std::fmt::{Display, Formatter};
 use std::io::Read;
-// TODO: fix
 use crate::chunk_type::ChunkType;
 use anyhow::Result;
 use crc::{Crc, Algorithm, CRC_32_ISO_HDLC};
 
 pub const CASTAGNOLI: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 
-
+#[derive(Eq, PartialEq, Debug)]
 pub struct Chunk{
     length: u32,
     chunk_type: ChunkType,
@@ -22,7 +21,7 @@ impl TryFrom<&[u8]> for Chunk {
         let length = u32::from_be_bytes(value[0..4].try_into().unwrap());
         let chunk_type: &[u8; 4] = <&[u8; 4]>::try_from(&value[4..8]).unwrap();
         let data = &value[8..(8 + length as usize)];
-        let crc = u32::from_be_bytes(value[(8 + length as usize)..].try_into().unwrap());
+        let crc = u32::from_be_bytes(value[(8 + length as usize)..(12 + length as usize)].try_into().unwrap());
         let mix = chunk_type
             .iter()
             .chain(data.iter())
@@ -57,7 +56,7 @@ impl Display for Chunk {
 }
 
 impl Chunk {
-    pub(crate) fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
+    pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
         let mix = chunk_type
             .bytes()
             .iter()
@@ -74,28 +73,28 @@ impl Chunk {
         }
     }
 
-    fn length(&self) -> u32 {
+    pub fn length(&self) -> u32 {
         self.length
     }
 
-    fn chunk_type(&self) -> &ChunkType {
+    pub fn chunk_type(&self) -> &ChunkType {
         &self.chunk_type
     }
 
-    fn data(&self) -> &[u8] {
+    pub fn data(&self) -> &[u8] {
         &self.data
     }
 
-    fn crc(&self) -> u32 {
+    pub fn crc(&self) -> u32 {
         self.crc
     }
 
-    fn data_as_string(&self) -> Result<String> {
+    pub fn data_as_string(&self) -> Result<String> {
         let s = String::from_utf8(self.data.clone())?;
         Ok(s)
     }
 
-    pub(crate) fn as_bytes(&self) -> Vec<u8> {
+    pub fn as_bytes(&self) -> Vec<u8> {
         let all= self.length
             .to_be_bytes()
             .iter()
