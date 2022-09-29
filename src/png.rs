@@ -51,7 +51,6 @@ impl Png {
         self.chunks.push(chunk);
     }
 
-    // TODO:
     pub fn remove_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
         let idx = self.chunks.iter().position(|chunk| chunk.chunk_type().to_string() == chunk_type);
         Ok(self.chunks.remove(idx.unwrap()))
