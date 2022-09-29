@@ -7,6 +7,7 @@
 > ./rush-png encode [path]/xxx.png  "anything you want"
 # decode the first message string you write to 
 > ./rush-png decode [path]/xxx.png  
+> message: anything you want
 # remove the first message string you write to
 > ./rush-png remove [path]/xxx.png  
 ```
