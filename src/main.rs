@@ -20,33 +20,33 @@ fn main() -> Result<()> {
     match &cli.command {
         commands::Commands::Encode(encode) => {
             // file input
-            let path = encode.file_path.as_ref().unwrap();
+            let path = &encode.file_path;
             let data = fs::read(path).unwrap();
             let mut p = png::Png::try_from(data.as_slice()).unwrap();
-            p.append_chunk(Chunk::new(ChunkType::from_str(encode.chunk_type.as_ref().unwrap().as_str()).unwrap(), encode.message.as_ref().unwrap().clone().into_bytes()));
+            p.append_chunk(Chunk::new(ChunkType::from_str(encode.chunk_type.as_str()).unwrap(), encode.message.clone().into_bytes()));
             fs::write(path, p.as_bytes())?;
             println!("your message injected!")
         },
         commands::Commands::Decode(decode) => {
-            let path = decode.file_path.as_ref().unwrap();
+            let path = &decode.file_path;
             let data = fs::read(path).unwrap();
             let mut p = png::Png::try_from(data.as_slice()).unwrap();
-            if let Some(msg) = p.chunk_by_type(decode.chunk_type.as_ref().unwrap()) {
+            if let Some(msg) = p.chunk_by_type(&decode.chunk_type) {
                 println!("message: {}", String::from_utf8(Vec::from(msg.data())).unwrap())
             } else {
                 println!("nothing found")
             }
         },
         commands::Commands::Remove(remove) => {
-            let path = remove.file_path.as_ref().unwrap();
+            let path = &remove.file_path;
             let data = fs::read(path).unwrap();
             let mut p = png::Png::try_from(data.as_slice()).unwrap();
-            p.remove_chunk(remove.chunk_type.as_ref().unwrap())?;
+            p.remove_chunk(&remove.chunk_type)?;
             fs::write(path, p.as_bytes())?;
             println!("your message removed!")
         },
         commands::Commands::Print(print) => {
-            let path = print.file_path.as_ref().unwrap();
+            let path = &print.file_path;
             let data = fs::read(path).unwrap();
             let p = png::Png::try_from(data.as_slice()).unwrap();
             println!("{:?}", p.as_bytes().as_slice())
