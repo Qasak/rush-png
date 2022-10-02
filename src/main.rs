@@ -21,7 +21,7 @@ fn main() -> Result<()> {
         commands::Commands::Encode(encode) => {
             // file input
             let path = &encode.file_path;
-            let data = fs::read(path).unwrap();
+            let data = fs::read(path)?;
             let mut p = png::Png::try_from(data.as_slice()).unwrap();
             p.append_chunk(Chunk::new(ChunkType::from_str(encode.chunk_type.as_str()).unwrap(), encode.message.clone().into_bytes()));
             fs::write(path, p.as_bytes())?;
@@ -29,17 +29,17 @@ fn main() -> Result<()> {
         },
         commands::Commands::Decode(decode) => {
             let path = &decode.file_path;
-            let data = fs::read(path).unwrap();
+            let data = fs::read(path)?;
             let mut p = png::Png::try_from(data.as_slice()).unwrap();
             if let Some(msg) = p.chunk_by_type(&decode.chunk_type) {
-                println!("message: {}", String::from_utf8(Vec::from(msg.data())).unwrap())
+                println!("message: {}", String::from_utf8(Vec::from(msg.data()))?)
             } else {
                 println!("nothing found")
             }
         },
         commands::Commands::Remove(remove) => {
             let path = &remove.file_path;
-            let data = fs::read(path).unwrap();
+            let data = fs::read(path)?;
             let mut p = png::Png::try_from(data.as_slice()).unwrap();
             p.remove_chunk(&remove.chunk_type)?;
             fs::write(path, p.as_bytes())?;
