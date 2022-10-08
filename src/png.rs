@@ -4,7 +4,7 @@ use std::process::id;
 use std::str::FromStr;
 use anyhow::{Result, Error};
 use crate::chunk_type::ChunkType;
-use crate::chunk::Chunk;
+use crate::chunk::{Chunk, ChunkError};
 
 
 
@@ -17,7 +17,8 @@ impl std::fmt::Display for PngError {
     }
 }
 
-impl std::error::Error for PngError {}
+impl std::error::Error for PngError {
+}
 
 
 
@@ -121,10 +122,10 @@ mod tests {
     fn chunk_from_strings(chunk_type: &str, data: &str) -> Result<Chunk> {
         use std::str::FromStr;
         // let chunk_type = ChunkType::from_str(chunk_type)?;
-        let chunk_type = ChunkType::from_str(chunk_type);
+        let chunk_type = ChunkType::from_str(chunk_type)?;
         let data: Vec<u8> = data.bytes().collect();
 
-        Ok(Chunk::new(chunk_type.unwrap(), data))
+        Ok(Chunk::new(chunk_type, data))
     }
 
     #[test]

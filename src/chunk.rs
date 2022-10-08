@@ -3,6 +3,7 @@ use std::io::Read;
 use crate::chunk_type::ChunkType;
 use anyhow::Result;
 use crc::{Crc, Algorithm, CRC_32_ISO_HDLC};
+use crate::png::PngError;
 
 pub const CASTAGNOLI: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 
@@ -23,7 +24,9 @@ impl std::fmt::Display for ChunkError {
     }
 }
 
-impl std::error::Error for ChunkError {}
+impl std::error::Error for ChunkError {
+
+}
 
 
 
@@ -64,9 +67,6 @@ impl Display for Chunk {
                self.length,
                self.crc
         )
-
-
-
     }
 }
 
@@ -143,12 +143,12 @@ mod tests {
             .copied()
             .collect();
 
-        Chunk::try_from(chunk_data.as_ref()).unwrap()
+        Chunk::try_from(chunk_data.as_ref())?
     }
 
     #[test]
     fn test_new_chunk() {
-        let chunk_type = ChunkType::from_str("RuSt").unwrap();
+        let chunk_type = ChunkType::from_str("RuSt")?;
         let data = "This is where your secret message will be!".as_bytes().to_vec();
         let chunk = Chunk::new(chunk_type, data);
         assert_eq!(chunk.length(), 42);
@@ -170,7 +170,7 @@ mod tests {
     #[test]
     fn test_chunk_string() {
         let chunk = testing_chunk();
-        let chunk_string = chunk.data_as_string().unwrap();
+        let chunk_string = chunk.data_as_string()?;
         let expected_chunk_string = String::from("This is where your secret message will be!");
         assert_eq!(chunk_string, expected_chunk_string);
     }
@@ -197,9 +197,9 @@ mod tests {
             .copied()
             .collect();
 
-        let chunk = Chunk::try_from(chunk_data.as_ref()).unwrap();
+        let chunk = Chunk::try_from(chunk_data.as_ref())?;
 
-        let chunk_string = chunk.data_as_string().unwrap();
+        let chunk_string = chunk.data_as_string()?;
         let expected_chunk_string = String::from("This is where your secret message will be!");
 
         assert_eq!(chunk.length(), 42);
@@ -245,7 +245,7 @@ mod tests {
             .copied()
             .collect();
 
-        let chunk: Chunk = TryFrom::try_from(chunk_data.as_ref()).unwrap();
+        let chunk: Chunk = TryFrom::try_from(chunk_data.as_ref())?;
 
         let _chunk_string = format!("{}", chunk);
     }
