@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, Formatter, write};
 use std::str::FromStr;
 use anyhow::{Result, Error};
 #[derive(Eq, PartialEq, Debug)]
@@ -16,6 +16,9 @@ pub struct ParseChunkTypeError {
     kind: ChunkTypeErrorKind,
 }
 
+
+
+
 impl TryFrom<[u8; 4]> for ChunkType {
     type Error = ParseChunkTypeError;
 
@@ -26,6 +29,16 @@ impl TryFrom<[u8; 4]> for ChunkType {
             Err(ParseChunkTypeError { kind: ChunkTypeErrorKind::TooManyChars })
         }
     }
+}
+
+impl Display for ParseChunkTypeError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ParseChunkTypeError!")
+    }
+}
+
+impl std::error::Error for ParseChunkTypeError {
+
 }
 
 impl FromStr for ChunkType {

@@ -8,13 +8,26 @@ use crate::chunk::Chunk;
 
 
 
+#[derive(Debug)]
+pub struct PngError;
+
+impl std::fmt::Display for PngError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Chunk Error")
+    }
+}
+
+impl std::error::Error for PngError {}
+
+
+
 #[derive(Eq, PartialEq, Debug)]
 pub struct Png {
     chunks: Vec<Chunk>
 }
 
 impl TryFrom<&[u8]> for Png {
-    type Error = ();
+    type Error = PngError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         let mut chunks = vec![];
@@ -27,7 +40,7 @@ impl TryFrom<&[u8]> for Png {
             }
             Ok(Png::from_chunks(chunks))
         } else {
-            Err(())
+            Err(PngError)
         }
     }
 }

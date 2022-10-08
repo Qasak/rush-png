@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{Display, Formatter, write};
 use std::io::Read;
 use crate::chunk_type::ChunkType;
 use anyhow::Result;
@@ -14,8 +14,22 @@ pub struct Chunk{
     crc: u32,
 }
 
+#[derive(Debug)]
+pub struct ChunkError;
+
+impl std::fmt::Display for ChunkError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Chunk Error")
+    }
+}
+
+impl std::error::Error for ChunkError {}
+
+
+
+
 impl TryFrom<&[u8]> for Chunk {
-    type Error = ();
+    type Error = ChunkError;
     // TODO: Optimisation code here
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         let length = u32::from_be_bytes(value[0..4].try_into().unwrap());
@@ -36,7 +50,7 @@ impl TryFrom<&[u8]> for Chunk {
                 crc
             })
         } else {
-            Err(())
+            Err(ChunkError)
         }
 
     }
