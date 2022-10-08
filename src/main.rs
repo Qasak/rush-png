@@ -22,15 +22,15 @@ fn main() -> Result<()> {
             // file input
             let path = &encode.file_path;
             let data = fs::read(path)?;
-            let mut p = png::Png::try_from(data.as_slice()).unwrap();
-            p.append_chunk(Chunk::new(ChunkType::from_str(encode.chunk_type.as_str()).unwrap(), encode.message.clone().into_bytes()));
+            let mut p = png::Png::try_from(data.as_slice())?;
+            p.append_chunk(Chunk::new(ChunkType::from_str(encode.chunk_type.as_str())?, encode.message.clone().into_bytes()));
             fs::write(path, p.as_bytes())?;
             println!("your message injected!")
         },
         commands::Commands::Decode(decode) => {
             let path = &decode.file_path;
             let data = fs::read(path)?;
-            let mut p = png::Png::try_from(data.as_slice()).unwrap();
+            let mut p = png::Png::try_from(data.as_slice())?;
             if let Some(msg) = p.chunk_by_type(&decode.chunk_type) {
                 println!("message: {}", String::from_utf8(Vec::from(msg.data()))?)
             } else {
@@ -40,15 +40,15 @@ fn main() -> Result<()> {
         commands::Commands::Remove(remove) => {
             let path = &remove.file_path;
             let data = fs::read(path)?;
-            let mut p = png::Png::try_from(data.as_slice()).unwrap();
+            let mut p = png::Png::try_from(data.as_slice())?;
             p.remove_chunk(&remove.chunk_type)?;
             fs::write(path, p.as_bytes())?;
             println!("your message removed!")
         },
         commands::Commands::Print(print) => {
             let path = &print.file_path;
-            let data = fs::read(path).unwrap();
-            let p = png::Png::try_from(data.as_slice()).unwrap();
+            let data = fs::read(path)?;
+            let p = png::Png::try_from(data.as_slice())?;
             println!("{:?}", p.as_bytes().as_slice())
         },
     }
