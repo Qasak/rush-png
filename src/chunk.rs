@@ -24,9 +24,8 @@ impl std::fmt::Display for ChunkError {
     }
 }
 
-impl std::error::Error for ChunkError {
 
-}
+impl std::error::Error for ChunkError {}
 
 
 

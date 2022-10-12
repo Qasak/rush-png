@@ -7,7 +7,7 @@ mod png;
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, BufWriter, Read, Write};
 use std::str::FromStr;
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Command, Parser, Subcommand, ArgMatches};
 use crate::chunk::Chunk;
 use crate::chunk_type::ChunkType;
 use anyhow::{Result, Error};
@@ -15,6 +15,8 @@ use std::fs;
 // pub type Error = Box<dyn std::error::Error>;
 // pub type Result<T> = std::result::Result<T, Error>;
 
+
+// TODO: refactor
 fn main() -> Result<()> {
     let cli = commands::Cli::parse();
     match &cli.command {
