@@ -4,10 +4,10 @@
 
 ```bash
 # encode any message string to a .png
-> ./rush-png encode [path]/xxx.png  "anything you want"
+> ./rush-png encode [path]/xxx.png  "月へ連れてって"
 # decode the first message string you write to 
 > ./rush-png decode [path]/xxx.png  
-> message: anything you want
+> message: 月へ連れてって
 # remove the first message string you write to
 > ./rush-png remove [path]/xxx.png  
 ```
