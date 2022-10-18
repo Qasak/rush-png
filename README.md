@@ -1,5 +1,5 @@
 # rush-png
-![image](https://user-images.githubusercontent.com/11088646/193095975-027fc92c-bcd3-4538-a90e-82f793767a1f.png)
+![image](https://github.com/Qasak/rush-png/blob/master/rush_png_struct.png)
 
 
 ```bash
