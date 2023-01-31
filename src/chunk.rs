@@ -7,7 +7,7 @@ use crate::png::PngError;
 
 pub const CASTAGNOLI: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug, Default)]
 pub struct Chunk{
     length: u32,
     chunk_type: ChunkType,
@@ -60,12 +60,17 @@ impl TryFrom<&[u8]> for Chunk {
 
 impl Display for Chunk {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "chunk_type: {}\ndata: {}\nlength:{}\ncrc:{}",
-               self.chunk_type,
-               String::from_utf8(self.data.clone()).unwrap(),
-               self.length,
-               self.crc
-        )
+        if let Ok(data_string) =String::from_utf8(self.data.clone()) {
+            write!(f, "chunk_type: {}\ndata: {}\nlength:{}\ncrc:{}",
+                   self.chunk_type,
+                   data_string,
+                   self.length,
+                   self.crc
+            )
+        } else {
+            Err(core::fmt::Error)
+        }
+
     }
 }
 
@@ -142,20 +147,25 @@ mod tests {
             .copied()
             .collect();
 
-        Chunk::try_from(chunk_data.as_ref()).unwrap()
+        if let Ok(ret) = Chunk::try_from(chunk_data.as_ref()) {
+            ret
+        } else {
+            Default::default()
+        }
     }
 
     #[test]
-    fn test_new_chunk() {
-        let chunk_type = ChunkType::from_str("RuSt").unwrap();
+    fn test_new_chunk() -> Result<()> {
+        let chunk_type = ChunkType::from_str("RuSt")?;
         let data = "This is where your secret message will be!".as_bytes().to_vec();
         let chunk = Chunk::new(chunk_type, data);
         assert_eq!(chunk.length(), 42);
         assert_eq!(chunk.crc(), 2882656334);
+        Ok(())
     }
 
     #[test]
-    fn test_chunk_length() {
+    fn test_chunk_length(){
         let chunk = testing_chunk();
         assert_eq!(chunk.length(), 42);
     }
@@ -167,11 +177,12 @@ mod tests {
     }
 
     #[test]
-    fn test_chunk_string() {
+    fn test_chunk_string() -> Result<()> {
         let chunk = testing_chunk();
-        let chunk_string = chunk.data_as_string().unwrap();
+        let chunk_string = chunk.data_as_string()?;
         let expected_chunk_string = String::from("This is where your secret message will be!");
         assert_eq!(chunk_string, expected_chunk_string);
+        Ok(())
     }
 
     #[test]
@@ -181,7 +192,7 @@ mod tests {
     }
 
     #[test]
-    fn test_valid_chunk_from_bytes() {
+    fn test_valid_chunk_from_bytes() -> Result<()>  {
         let data_length: u32 = 42;
         let chunk_type = "RuSt".as_bytes();
         let message_bytes = "This is where your secret message will be!".as_bytes();
@@ -196,15 +207,16 @@ mod tests {
             .copied()
             .collect();
 
-        let chunk = Chunk::try_from(chunk_data.as_ref()).unwrap();
+        let chunk = Chunk::try_from(chunk_data.as_ref())?;
 
-        let chunk_string = chunk.data_as_string().unwrap();
+        let chunk_string = chunk.data_as_string()?;
         let expected_chunk_string = String::from("This is where your secret message will be!");
 
         assert_eq!(chunk.length(), 42);
         assert_eq!(chunk.chunk_type().to_string(), String::from("RuSt"));
         assert_eq!(chunk_string, expected_chunk_string);
         assert_eq!(chunk.crc(), 2882656334);
+        Ok(())
     }
 
     #[test]
@@ -229,7 +241,7 @@ mod tests {
     }
 
     #[test]
-    pub fn test_chunk_trait_impls() {
+    pub fn test_chunk_trait_impls() -> Result<()>  {
         let data_length: u32 = 42;
         let chunk_type = "RuSt".as_bytes();
         let message_bytes = "This is where your secret message will be!".as_bytes();
@@ -244,8 +256,9 @@ mod tests {
             .copied()
             .collect();
 
-        let chunk: Chunk = TryFrom::try_from(chunk_data.as_ref()).unwrap();
+        let chunk: Chunk = TryFrom::try_from(chunk_data.as_ref())?;
 
         let _chunk_string = format!("{}", chunk);
+        Ok(())
     }
 }

@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter, write};
 use std::str::FromStr;
 use anyhow::{Result, Error};
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug, Default)]
 pub struct ChunkType {
     chunk_type: [u8; 4],
 }
