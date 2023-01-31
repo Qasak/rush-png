@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter, write};
 use std::io::Read;
 use crate::chunk_type::ChunkType;
-use anyhow::Result;
+use anyhow::{Result, Error, anyhow};
 use crc::{Crc, Algorithm, CRC_32_ISO_HDLC};
 use crate::png::PngError;
 
@@ -31,14 +31,14 @@ impl std::error::Error for ChunkError {}
 
 
 impl TryFrom<&[u8]> for Chunk {
-    type Error = ChunkError;
+    type Error = Error;
     // TODO: Optimisation code here
-    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        let length = u32::from_be_bytes(value[0..4].try_into().unwrap());
-        let chunk_type: &[u8; 4] = <&[u8; 4]>::try_from(&value[4..8]).unwrap();
+    fn try_from(value: &[u8]) -> Result<Self> {
+        let length = u32::from_be_bytes(value[0..4].try_into()?);
+        let chunk_type: &[u8; 4] = <&[u8; 4]>::try_from(&value[4..8])?;
         println!("chunk_type: {:?}", String::from_utf8(chunk_type.to_vec()));
         let data = &value[8..(8 + length as usize)];
-        let crc = u32::from_be_bytes(value[(8 + length as usize)..(12 + length as usize)].try_into().unwrap());
+        let crc = u32::from_be_bytes(value[(8 + length as usize)..(12 + length as usize)].try_into()?);
         let mix = chunk_type
             .iter()
             .chain(data.iter())
@@ -47,12 +47,12 @@ impl TryFrom<&[u8]> for Chunk {
         let real_crc = CASTAGNOLI.checksum(mix.as_slice());
         if crc == real_crc {
             Ok(Chunk { length,
-                chunk_type: {ChunkType::try_from(*chunk_type).unwrap()},
+                chunk_type: {ChunkType::try_from(*chunk_type)?},
                 data: data.to_vec(),
                 crc
             })
         } else {
-            Err(ChunkError)
+            Err(anyhow!(ChunkError))
         }
 
     }
@@ -142,12 +142,12 @@ mod tests {
             .copied()
             .collect();
 
-        Chunk::try_from(chunk_data.as_ref())?
+        Chunk::try_from(chunk_data.as_ref()).unwrap()
     }
 
     #[test]
     fn test_new_chunk() {
-        let chunk_type = ChunkType::from_str("RuSt")?;
+        let chunk_type = ChunkType::from_str("RuSt").unwrap();
         let data = "This is where your secret message will be!".as_bytes().to_vec();
         let chunk = Chunk::new(chunk_type, data);
         assert_eq!(chunk.length(), 42);
@@ -169,7 +169,7 @@ mod tests {
     #[test]
     fn test_chunk_string() {
         let chunk = testing_chunk();
-        let chunk_string = chunk.data_as_string()?;
+        let chunk_string = chunk.data_as_string().unwrap();
         let expected_chunk_string = String::from("This is where your secret message will be!");
         assert_eq!(chunk_string, expected_chunk_string);
     }
@@ -196,9 +196,9 @@ mod tests {
             .copied()
             .collect();
 
-        let chunk = Chunk::try_from(chunk_data.as_ref())?;
+        let chunk = Chunk::try_from(chunk_data.as_ref()).unwrap();
 
-        let chunk_string = chunk.data_as_string()?;
+        let chunk_string = chunk.data_as_string().unwrap();
         let expected_chunk_string = String::from("This is where your secret message will be!");
 
         assert_eq!(chunk.length(), 42);
@@ -244,7 +244,7 @@ mod tests {
             .copied()
             .collect();
 
-        let chunk: Chunk = TryFrom::try_from(chunk_data.as_ref())?;
+        let chunk: Chunk = TryFrom::try_from(chunk_data.as_ref()).unwrap();
 
         let _chunk_string = format!("{}", chunk);
     }
